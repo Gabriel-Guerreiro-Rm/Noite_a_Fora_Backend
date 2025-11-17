@@ -133,3 +133,80 @@ O fluxo demonstra como a compra de um ingresso no **Sistema 2** é bloqueada pel
     * O S2 chama o S1 (`POST /event/internal/purchase`) para dar baixa no estoque.
 
 ---
+
+## **6. Diagramas de Arquitetura e Fluxos**
+
+Abaixo estão os diagramas da arquitetura do sistema e os principais fluxos de integração (Mermaid). Você pode visualizar esses diagramas no GitHub ou em editores com suporte a Mermaid.
+
+**Arquitetura (visão geral)**
+
+```mermaid
+graph LR
+    F[Frontend] -->|Login / Compra| S2[Sales API\n(porta:3000)]
+    S2 -->|GET /subscription/status/:id\n(Bearer JWT)| S3[Subscription API\n(porta:3002)]
+    S2 -->|POST /event/internal/purchase\n(API Key)| S1[Core API\n(porta:3001)]
+    S3 -->|grava| DB3[(Postgres - subscriptions)]
+    S1 -->|grava| DB1[(Postgres - public)]
+    S2 -->|grava| DB2[(Postgres - sales)]
+    Stripe[Stripe (Gateway - modo teste)] -->|webhook POST /subscription/webhook| S3
+    S3 -->|gera link checkout| Stripe
+    classDef services fill:#f9f,stroke:#333,stroke-width:1px;
+    class S1,S2,S3 services;
+```
+
+**Fluxo A — Barreira de Assinatura (Paywall)**
+
+```mermaid
+sequenceDiagram
+    participant Frontend
+    participant S2 as Sales API
+    participant S3 as Subscription API
+    Frontend->>S2: POST /auth/login (credentials)
+    S2->>S3: GET /subscription/status/:id (Bearer JWT)
+    S3-->>S2: { status: INACTIVE | ACTIVE }
+    alt INACTIVE
+        S2-->>Frontend: 402 Payment Required (mostrar paywall)
+    else ACTIVE
+        S2-->>Frontend: 200 OK + token
+    end
+```
+
+**Fluxo B — Compra e Estoque (server-to-server crítico)**
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant S2 as Sales API
+    participant S1 as Core API
+    participant DB1 as Core DB
+    Client->>S2: POST /order/buy (Bearer token)
+    S2->>S1: POST /event/internal/purchase (API Key + pedido)
+    S1->>DB1: BEGIN TRANSACTION
+    S1->>DB1: SELECT estoque
+    alt estoque >= 1
+        S1->>DB1: UPDATE estoque = estoque - 1
+        S1-->>S2: 200 OK (compra confirmada)
+    else
+        S1-->>S2: 409 Conflict (sem estoque)
+    end
+```
+
+**Fluxo C — Webhook (Pagamento assíncrono)**
+
+```mermaid
+sequenceDiagram
+    participant Stripe
+    participant S3 as Subscription API
+    participant DB3 as Subscriptions DB
+    Stripe->>S3: POST /subscription/webhook (event: payment.succeeded)
+    S3->>DB3: UPDATE subscription.status = ACTIVE
+    S3-->>Stripe: 200 OK
+    note right of S3: Opcional: notificar S2 ou outros serviços
+```
+
+**Legenda e observações**
+
+- **Autenticação:** S2 usa JWT para autenticar clientes; chamadas internas críticas S2->S1 usam `API Key` entre serviços.
+- **Bancos:** cada sistema tem seu schema/BD (public, sales, subscriptions) conforme tabela anterior.
+- **Stripe:** usado em modo teste para gerar checkout; envia webhook para `sistema3`.
+- **Renderização Mermaid:** GitHub suporta Mermaid nativamente; localmente, use um preview com suporte a Mermaid (ex.: extensão "Markdown Preview Enhanced" ou similar no VS Code).
