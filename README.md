@@ -1,8 +1,8 @@
-# 🚀 Projeto Final AV3: TicketHub - Sistema de Venda de Ingressos
+# 🚀 Projeto Final AV3: Noite a Fora - Sistema de Venda de Ingressos
 
 ## 🎓 Disciplina: Técnicas de Integração de Sistemas (AV3)
 
-### 🧑‍💻 Equipe: [Nomes dos Integrantes]
+### 🧑‍💻 Equipe: Gabriel Guerreiro, Carlos Rodrigues, Diego dos Santos.
 
 ---
 
@@ -142,9 +142,9 @@ Abaixo estão os diagramas da arquitetura do sistema e os principais fluxos de i
 
 ```mermaid
 graph LR
-    F[Frontend] -->|Login / Compra| S2[Sales API\n(porta:3000)]
-    S2 -->|GET /subscription/status/:id\n(Bearer JWT)| S3[Subscription API\n(porta:3002)]
-    S2 -->|POST /event/internal/purchase\n(API Key)| S1[Core API\n(porta:3001)]
+    F[Frontend] -->|Login / Compra| S2[Sales API<br/>(porta:3000)]
+    S2 -->|GET /subscription/status/:id<br/>(Bearer JWT)| S3[Subscription API<br/>(porta:3002)]
+    S2 -->|POST /event/internal/purchase<br/>(API Key)| S1[Core API<br/>(porta:3001)]
     S3 -->|grava| DB3[(Postgres - subscriptions)]
     S1 -->|grava| DB1[(Postgres - public)]
     S2 -->|grava| DB2[(Postgres - sales)]
