@@ -6,7 +6,7 @@
 
 ---
 
-## 1. Visão Geral e Objetivo
+## 1. Visão Geral e Objetivo Principal
 
 [cite_start]Este projeto é uma **solução integrada** que simula uma plataforma de venda de ingressos, aplicando os conceitos de comunicação entre sistemas e segurança[cite: 26].
 
