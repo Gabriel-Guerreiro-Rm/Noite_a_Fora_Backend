@@ -36,8 +36,8 @@ export class StripeService {
         },
       ],
       mode: 'payment',
-      success_url: 'http://localhost:3000/payment-success',
-      cancel_url: 'http://localhost:3000/payment-cancel',
+      success_url: 'http://localhost:5173/app/events',
+      cancel_url: 'http://localhost:5173/app/paywall',
       client_reference_id: clientId,
     });
 

@@ -23,6 +23,12 @@ export class OrganizerController {
   }
 
   @UseGuards(AuthGuard)
+  @Get()
+  findAll() {
+    return this.organizerService.findAll();
+  }
+
+  @UseGuards(AuthGuard)
   @Get('me')
   findOne(@Request() req) {
     const organizerId = req.user.sub;

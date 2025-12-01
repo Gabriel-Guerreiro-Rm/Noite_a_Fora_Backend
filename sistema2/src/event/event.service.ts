@@ -6,7 +6,7 @@ import { firstValueFrom } from 'rxjs';
 export class EventService {
   constructor(private readonly httpService: HttpService) {}
 
-  private readonly SISTEMA1_URL = 'http://localhost:3001';
+  private readonly SISTEMA1_URL = 'http://localhost:3000'; 
   private readonly SISTEMA1_API_KEY =
     'ApiKey NOSSA_CHAVE_SECRETA_DO_SISTEMA_2';
 
@@ -16,7 +16,7 @@ export class EventService {
     );
     return response.data;
   }
-
+  
   async purchaseTicket(ticketLotId: string) {
     const response = await firstValueFrom(
       this.httpService.post(

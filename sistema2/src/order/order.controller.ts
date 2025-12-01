@@ -9,13 +9,14 @@ import {
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { ClientAuthGuard } from 'src/auth/guards/client-auth.guard';
+import { SubscriptionGuard } from 'src/auth/guards/subscription.guard';
 import { CreateOrderDto } from './dto/create-order.dto';
 
 @Controller('order')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  @UseGuards(ClientAuthGuard)
+  @UseGuards(ClientAuthGuard, SubscriptionGuard) 
   @Post('buy')
   create(@Request() req, @Body() createOrderDto: CreateOrderDto) {
     const clientId = req.user.sub;

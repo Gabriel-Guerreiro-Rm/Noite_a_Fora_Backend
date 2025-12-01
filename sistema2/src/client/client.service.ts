@@ -37,6 +37,16 @@ export class ClientService {
     return client;
   }
 
+  async findAll() {
+    return this.prisma.client.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+  }
+
   async update(id: string, updateClientDto: UpdateClientDto) {
     if (updateClientDto.password) {
       const salt = await bcrypt.genSalt();

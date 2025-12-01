@@ -37,6 +37,16 @@ export class OrganizerService {
     return organizer;
   }
 
+  async findAll() {
+    return this.prisma.organizer.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+  }
+
   async update(id: string, updateOrganizerDto: UpdateOrganizerDto) {
     if (updateOrganizerDto.password) {
       const salt = await bcrypt.genSalt();

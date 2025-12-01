@@ -15,6 +15,7 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { CreateTicketLotDto } from './dto/create-ticket-lot.dto';
 import { ApiKeyGuard } from 'src/auth/guards/api-key.guard';
 import { UpdateEventDto } from './dto/update-event.dto';
+import { UpdateTicketLotDto } from './dto/update-ticket-lot.dto';
 
 @Controller('event')
 export class EventController {
@@ -35,6 +36,11 @@ export class EventController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.eventService.findOneEvent(id);
+  }
+  
+  @Get('lot/:id')
+  findOneTicketLot(@Param('id') lotId: string) {
+    return this.eventService.findOneTicketLot(lotId);
   }
 
   @UseGuards(AuthGuard)
@@ -68,6 +74,28 @@ export class EventController {
       eventId,
       createTicketLotDto,
     );
+  }
+  
+  @UseGuards(AuthGuard)
+  @Patch('lot/:id')
+  updateTicketLot(
+    @Request() req,
+    @Param('id') lotId: string,
+    @Body() updateTicketLotDto: UpdateTicketLotDto,
+  ) {
+    const organizerId = req.user.sub;
+    return this.eventService.updateTicketLot(
+      organizerId,
+      lotId,
+      updateTicketLotDto,
+    );
+  }
+  
+  @UseGuards(AuthGuard)
+  @Delete('lot/:id')
+  deleteTicketLot(@Request() req, @Param('id') lotId: string) {
+    const organizerId = req.user.sub;
+    return this.eventService.deleteTicketLot(organizerId, lotId);
   }
 
   @UseGuards(ApiKeyGuard)

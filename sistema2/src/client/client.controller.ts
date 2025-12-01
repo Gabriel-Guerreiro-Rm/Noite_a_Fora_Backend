@@ -23,6 +23,12 @@ export class ClientController {
   }
 
   @UseGuards(ClientAuthGuard)
+  @Get()
+  findAll() {
+    return this.clientService.findAll();
+  }
+  
+  @UseGuards(ClientAuthGuard)
   @Get('me')
   findOne(@Request() req) {
     const clientId = req.user.sub;
