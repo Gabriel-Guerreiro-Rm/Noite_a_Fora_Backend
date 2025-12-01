@@ -4,7 +4,7 @@ import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@
 export class SubscriptionGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
-    const user = request.user;
+    const user = request.user; 
 
     if (user.status !== 'ACTIVE') {
       throw new ForbiddenException('Assinatura inativa. Pague o plano para continuar.');
