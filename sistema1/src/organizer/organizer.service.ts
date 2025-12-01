@@ -1,8 +1,8 @@
-import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrganizerDto } from './dto/create-organizer.dto';
-import { UpdateOrganizerDto } from './dto/update-organizer.dto';
 import * as bcrypt from 'bcrypt';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class OrganizerService {
@@ -12,12 +12,33 @@ export class OrganizerService {
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(createOrganizerDto.password, salt);
 
-    return this.prisma.organizer.create({
-      data: {
-        email: createOrganizerDto.email,
-        name: createOrganizerDto.name,
-        password: hashedPassword,
-      },
+    try {
+      return await this.prisma.organizer.create({
+        data: {
+          ...createOrganizerDto,
+          password: hashedPassword,
+        },
+      });
+    } catch (e) {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'Já existe um organizador cadastrado com esse e-mail.',
+        );
+      }
+      throw e;
+    }
+  }
+
+  async findAll() {
+    return this.prisma.organizer.findMany();
+  }
+
+  async findOne(id: string) {
+    return this.prisma.organizer.findUnique({
+      where: { id },
     });
   }
 
@@ -27,34 +48,7 @@ export class OrganizerService {
     });
   }
 
-  async findOne(id: string) {
-    const organizer = await this.prisma.organizer.findUnique({
-      where: { id },
-    });
-    if (!organizer) {
-      throw new NotFoundException('Organizador não encontrado');
-    }
-    return organizer;
-  }
-
-  async findAll() {
-    return this.prisma.organizer.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-      },
-    });
-  }
-
-  async update(id: string, updateOrganizerDto: UpdateOrganizerDto) {
-    if (updateOrganizerDto.password) {
-      const salt = await bcrypt.genSalt();
-      updateOrganizerDto.password = await bcrypt.hash(
-        updateOrganizerDto.password,
-        salt,
-      );
-    }
+  async update(id: string, updateOrganizerDto: any) {
     return this.prisma.organizer.update({
       where: { id },
       data: updateOrganizerDto,
@@ -62,9 +56,8 @@ export class OrganizerService {
   }
 
   async remove(id: string) {
-    await this.prisma.organizer.delete({
+    return this.prisma.organizer.delete({
       where: { id },
     });
-    return { message: 'Organizador excluído com sucesso' };
   }
 }
