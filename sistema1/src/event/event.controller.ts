@@ -6,12 +6,15 @@ import {
   Request,
   Get,
   Param,
+  Patch,
+  Delete,
 } from '@nestjs/common';
 import { EventService } from './event.service';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { CreateEventDto } from './dto/create-event.dto';
 import { CreateTicketLotDto } from './dto/create-ticket-lot.dto';
 import { ApiKeyGuard } from 'src/auth/guards/api-key.guard';
+import { UpdateEventDto } from './dto/update-event.dto';
 
 @Controller('event')
 export class EventController {
@@ -22,6 +25,34 @@ export class EventController {
   create(@Request() req, @Body() createEventDto: CreateEventDto) {
     const organizerId = req.user.sub;
     return this.eventService.createEvent(organizerId, createEventDto);
+  }
+
+  @Get()
+  findAll() {
+    return this.eventService.findAllEvents();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.eventService.findOneEvent(id);
+  }
+
+  @UseGuards(AuthGuard)
+  @Patch(':id')
+  update(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() updateEventDto: UpdateEventDto,
+  ) {
+    const organizerId = req.user.sub;
+    return this.eventService.updateEvent(organizerId, id, updateEventDto);
+  }
+
+  @UseGuards(AuthGuard)
+  @Delete(':id')
+  remove(@Request() req, @Param('id') id: string) {
+    const organizerId = req.user.sub;
+    return this.eventService.deleteEvent(organizerId, id);
   }
 
   @UseGuards(AuthGuard)
@@ -37,11 +68,6 @@ export class EventController {
       eventId,
       createTicketLotDto,
     );
-  }
-
-  @Get()
-  findAll() {
-    return this.eventService.findAllEvents();
   }
 
   @UseGuards(ApiKeyGuard)

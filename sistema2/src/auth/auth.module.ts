@@ -4,10 +4,12 @@ import { AuthService } from './auth.service';
 import { ClientModule } from 'src/client/client.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ClientAuthGuard } from './guards/client-auth.guard';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
     ClientModule,
+    HttpModule,
     JwtModule.register({
       global: true,
       secret: 'OUTRO_SEGREDO_SUPER_SECRETO_PARA_TESTES',

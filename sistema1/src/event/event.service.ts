@@ -1,7 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { CreateTicketLotDto } from './dto/create-ticket-lot.dto';
+import { UpdateEventDto } from './dto/update-event.dto';
 
 @Injectable()
 export class EventService {
@@ -16,6 +17,63 @@ export class EventService {
       },
     });
   }
+
+  async findAllEvents() {
+    return this.prisma.event.findMany({
+      include: {
+        ticketLots: true,
+      },
+    });
+  }
+  
+  async findOneEvent(id: string) {
+    const event = await this.prisma.event.findUnique({
+        where: { id },
+        include: { ticketLots: true },
+    });
+    if (!event) {
+        throw new NotFoundException('Evento não encontrado');
+    }
+    return event;
+  }
+
+  async updateEvent(
+    organizerId: string,
+    id: string,
+    updateEventDto: UpdateEventDto,
+  ) {
+    const event = await this.prisma.event.findUnique({ where: { id } });
+
+    if (!event) {
+      throw new NotFoundException('Evento não encontrado');
+    }
+    if (event.organizerId !== organizerId) {
+      throw new UnauthorizedException('Você não é o dono deste evento');
+    }
+
+    return this.prisma.event.update({
+      where: { id },
+      data: {
+        ...updateEventDto,
+        date: updateEventDto.date ? new Date(updateEventDto.date) : undefined,
+      },
+    });
+  }
+
+  async deleteEvent(organizerId: string, id: string) {
+    const event = await this.prisma.event.findUnique({ where: { id } });
+
+    if (!event) {
+      throw new NotFoundException('Evento não encontrado');
+    }
+    if (event.organizerId !== organizerId) {
+      throw new UnauthorizedException('Você não é o dono deste evento');
+    }
+
+    await this.prisma.event.delete({ where: { id } });
+    return { message: 'Evento excluído com sucesso' };
+  }
+
 
   async addTicketLot(
     organizerId: string,
@@ -42,36 +100,28 @@ export class EventService {
     });
   }
 
-  async findAllEvents() {
-    return this.prisma.event.findMany({
-      include: {
-        ticketLots: true,
+  async purchaseTicket(ticketLotId: string) {
+    const ticketLot = await this.prisma.ticketLot.findUnique({
+      where: { id: ticketLotId },
+    });
+
+    if (!ticketLot) {
+      throw new UnauthorizedException('Lote de ingresso não encontrado');
+    }
+
+    if (ticketLot.quantity <= 0) {
+      throw new UnauthorizedException('Ingressos esgotados');
+    }
+
+    await this.prisma.ticketLot.update({
+      where: { id: ticketLotId },
+      data: {
+        quantity: {
+          decrement: 1,
+        },
       },
     });
+
+    return { message: 'Compra validada com sucesso' };
   }
-
-  async purchaseTicket(ticketLotId: string) {
-  const ticketLot = await this.prisma.ticketLot.findUnique({
-    where: { id: ticketLotId },
-  });
-
-  if (!ticketLot) {
-    throw new UnauthorizedException('Lote de ingresso não encontrado');
-  }
-
-  if (ticketLot.quantity <= 0) {
-    throw new UnauthorizedException('Ingressos esgotados');
-  }
-
-  await this.prisma.ticketLot.update({
-    where: { id: ticketLotId },
-    data: {
-      quantity: {
-        decrement: 1,
-      },
-    },
-  });
-
-  return { message: 'Compra validada com sucesso' };
- }
 }
